@@ -1,0 +1,10 @@
+.layoutRoot {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.layoutContent {
+  margin-top: 5px; /* altura da navbar + um espacinho */
+  padding: 5px;    /* opcional, deixa conteúdo mais confortável */
+}
