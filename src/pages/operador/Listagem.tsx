@@ -5,13 +5,21 @@ import Modal from "react-bootstrap/Modal";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
-function ListaOperador() {
-  const [operadores, setOperadores] = useState([]);
+// Define o tipo de Operador
+type Operador = {
+  id_operador: number;
+  nome: string;
+  email: string;
+  admin: boolean;
+};
+
+export default function ListaOperador() {
+  const [operadores, setOperadores] = useState<Operador[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [operadorToDelete, setOperadorToDelete] = useState(null);
+  const [operadorToDelete, setOperadorToDelete] = useState<Operador | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token") ?? "";
   const isAdmin = JSON.parse(localStorage.getItem("isAdmin") ?? "false");
   const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") ?? "null");
 
@@ -29,20 +37,14 @@ function ListaOperador() {
 
       if (!res.ok) throw new Error("Erro ao buscar operadores");
 
-      const json = await res.json();
-      let lista = json.data?.operador || [];
-
-      console.log("isAdmin:", isAdmin);
-      console.log("usuarioLogado:", usuarioLogado);
-      console.log("lista antes do filtro:", lista);
+      const json: { data?: { operador?: Operador[] } } = await res.json();
+      let lista: Operador[] = json.data?.operador || [];
 
       if (!isAdmin && usuarioLogado) {
         lista = lista.filter(
           (op) => Number(op.id_operador) === Number(usuarioLogado.id_operador)
         );
       }
-
-      console.log("lista depois do filtro:", lista);
 
       setOperadores(lista);
     } catch (error) {
@@ -59,13 +61,11 @@ function ListaOperador() {
     navigate("/app/cadastrarOperador");
   };
 
-  // Abre o modal de confirmação
-  const handleDeleteClick = (operador) => {
+  const handleDeleteClick = (operador: Operador) => {
     setOperadorToDelete(operador);
     setShowConfirm(true);
   };
 
-  // Confirma exclusão
   const handleConfirmDelete = async () => {
     if (!operadorToDelete) return;
 
@@ -74,22 +74,17 @@ function ListaOperador() {
         `${API_URL}/operador/delete/${operadorToDelete.id_operador}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       if (!response.ok) throw new Error("Erro ao excluir operador");
 
-      // Atualiza a lista local removendo o operador deletado
       setOperadores((prev) =>
         prev.filter((op) => op.id_operador !== operadorToDelete.id_operador)
       );
 
-      toast.success(
-        `Operador "${operadorToDelete.nome}" excluído com sucesso!`
-      );
+      toast.success(`Operador "${operadorToDelete.nome}" excluído com sucesso!`);
     } catch (err) {
       console.error(err);
       toast.error("Erro ao excluir operador.");
@@ -123,22 +118,19 @@ function ListaOperador() {
                 <td>{op.nome}</td>
                 <td>{op.email}</td>
                 <td>{op.admin ? "Sim" : "Não"}</td>
-                <>
+                {isAdmin && (
                   <td>
-                    {isAdmin && (
-                      <Button
-                        variant="danger"
-                        size="sm"
-                        onClick={() => handleDeleteClick(op)}
-                      >
-                        Excluir
-                      </Button>
-                    )}
-
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="me-2"
+                      onClick={() => handleDeleteClick(op)}
+                    >
+                      Excluir
+                    </Button>
                     <Button
                       variant="warning"
                       size="sm"
-                      className="me-2"
                       onClick={() =>
                         navigate(`/app/operador/editar/${op.id_operador}`)
                       }
@@ -146,16 +138,16 @@ function ListaOperador() {
                       Editar
                     </Button>
                   </td>
-                </>
+                )}
               </tr>
             ))}
           </tbody>
         </Table>
       )}
 
-      <button className="btn btn-primary" onClick={handleCadastrar}>
+      <Button className="btn btn-primary" onClick={handleCadastrar}>
         Cadastrar
-      </button>
+      </Button>
 
       {/* Modal de confirmação */}
       <Modal show={showConfirm} onHide={() => setShowConfirm(false)} centered>
@@ -177,5 +169,3 @@ function ListaOperador() {
     </div>
   );
 }
-
-export default ListaOperador;

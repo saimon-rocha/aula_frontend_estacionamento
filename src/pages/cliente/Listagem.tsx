@@ -5,10 +5,12 @@ import Modal from "react-bootstrap/Modal";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
+// Tipo Cliente
+type Carro = { modelo: string; placa: string };
 type Cliente = {
   id_cliente: number;
   nome: string;
-  carros: { modelo: string; placa: string }[];
+  carros: Carro[];
 };
 
 export default function ListaCliente() {
@@ -17,8 +19,7 @@ export default function ListaCliente() {
   const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
-  const token = localStorage.getItem("token");
-
+  const token = localStorage.getItem("token") ?? "";
   const isAdmin = JSON.parse(localStorage.getItem("isAdmin") ?? "false");
 
   const navigate = useNavigate();
@@ -40,15 +41,15 @@ export default function ListaCliente() {
         },
       });
 
-      // 🔧 401 → token expirado
       if (res.status === 401) {
-        return handleTokenExpirado();
+        handleTokenExpirado();
+        return;
       }
 
       if (!res.ok) throw new Error("Erro ao buscar Clientes");
 
-      const json = await res.json();
-      const lista = json.data?.clientes || [];
+      const json: { data?: { clientes?: Cliente[] } } = await res.json();
+      const lista: Cliente[] = json.data?.clientes || [];
       setClientes(lista);
     } catch (error) {
       console.error(error);
@@ -68,14 +69,13 @@ export default function ListaCliente() {
 
   const handleCadastrar = () => navigate("/app/cadastrarCliente");
 
-  const handleDeleteClick = (cliente) => {
+  const handleDeleteClick = (cliente: Cliente) => {
     setClienteToDelete(cliente);
     setShowConfirm(true);
   };
 
   const handleConfirmDelete = async () => {
     if (!clienteToDelete) return;
-
     if (!token) return handleTokenExpirado();
 
     try {
@@ -83,9 +83,7 @@ export default function ListaCliente() {
         `${API_URL}/cliente/delete/${clienteToDelete.id_cliente}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -128,51 +126,50 @@ export default function ListaCliente() {
             </tr>
           </thead>
           <tbody>
-            {clientes.map((op) => (
-              <tr key={op.id_cliente}>
-                <td>{op.id_cliente}</td>
-                <td>{op.nome}</td>
+            {clientes.map((cliente) => (
+              <tr key={cliente.id_cliente}>
+                <td>{cliente.id_cliente}</td>
+                <td>{cliente.nome}</td>
                 <td>
-                  {op.carros?.length > 0
-                    ? op.carros.map((c) => c.modelo).join(", ")
+                  {cliente.carros.length > 0
+                    ? cliente.carros.map((c) => c.modelo).join(", ")
                     : "Sem carro"}
                 </td>
                 <td>
-                  {op.carros.length > 0
-                    ? op.carros.map((c) => c.placa).join(", ")
+                  {cliente.carros.length > 0
+                    ? cliente.carros.map((c) => c.placa).join(", ")
                     : "Sem carro"}
                 </td>
-                <td>
-                  {isAdmin && (
+                {isAdmin && (
+                  <td>
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={() => handleDeleteClick(op)}
+                      className="me-2"
+                      onClick={() => handleDeleteClick(cliente)}
                     >
                       Excluir
                     </Button>
-                  )}
-
-                  <Button
-                    variant="warning"
-                    size="sm"
-                    className="me-2"
-                    onClick={() =>
-                      navigate(`/app/cliente/editar/${op.id_cliente}`)
-                    }
-                  >
-                    Editar
-                  </Button>
-                </td>
+                    <Button
+                      variant="warning"
+                      size="sm"
+                      onClick={() =>
+                        navigate(`/app/cliente/editar/${cliente.id_cliente}`)
+                      }
+                    >
+                      Editar
+                    </Button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </Table>
       )}
 
-      <button className="btn btn-primary" onClick={handleCadastrar}>
+      <Button className="btn btn-primary" onClick={handleCadastrar}>
         Cadastrar
-      </button>
+      </Button>
 
       <Modal show={showConfirm} onHide={() => setShowConfirm(false)} centered>
         <Modal.Header closeButton>
