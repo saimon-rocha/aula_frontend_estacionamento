@@ -28,7 +28,7 @@ export default function CadastroCliente() {
   const token = localStorage.getItem("token");
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<any>,
     index?: number
   ) => {
     const { name, value } = e.target;

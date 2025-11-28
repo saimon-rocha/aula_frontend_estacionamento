@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Form, Button, Card, Row, Col, Spinner } from "react-bootstrap";
+import { Form, Button, Card, Row, Col } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 
@@ -8,6 +8,12 @@ type Carro = {
   modelo: string;
   placa: string;
   cor: string;
+};
+
+type ClienteAPIResponse = {
+  nome: string;
+  dt_nascimento: string;
+  carros?: Carro[];
 };
 
 type FormState = {
@@ -20,7 +26,7 @@ export default function EditarCliente() {
   const { id_cliente } = useParams<{ id_cliente: string }>();
   const navigate = useNavigate();
   const API_URL = import.meta.env.VITE_API_URL;
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token") ?? "";
 
   const [form, setForm] = useState<FormState>({
     nome: "",
@@ -28,8 +34,8 @@ export default function EditarCliente() {
     carros: [],
   });
 
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     if (!id_cliente || !token) {
@@ -46,7 +52,7 @@ export default function EditarCliente() {
 
         if (!res.ok) throw new Error("Cliente não encontrado");
 
-        const data = await res.json();
+        const data: { data: ClienteAPIResponse } = await res.json();
         const c = data.data;
 
         const [dia, mes, ano] = c.dt_nascimento.split("/");
@@ -56,11 +62,11 @@ export default function EditarCliente() {
           nome: c.nome,
           dt_nascimento: dt_formatada,
           carros:
-            c.carros?.map((carro: any) => ({
+            c.carros?.map((carro: Carro) => ({
               id_carro: carro.id_carro,
               modelo: carro.modelo,
               placa: carro.placa,
-              cor: carro.cor || "",
+              cor: carro.cor ?? "",
             })) || [],
         });
       } catch (error) {
@@ -75,7 +81,7 @@ export default function EditarCliente() {
   }, [id_cliente, token, API_URL, navigate]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     index?: number
   ) => {
     const { name, value } = e.target;
@@ -87,7 +93,7 @@ export default function EditarCliente() {
       return;
     }
 
-    setForm({ ...form, [name]: value });
+    setForm({ ...form, [name]: value } as Pick<FormState, keyof FormState>);
   };
 
   const addCarro = () => {
@@ -113,7 +119,7 @@ export default function EditarCliente() {
     });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
 
@@ -138,11 +144,11 @@ export default function EditarCliente() {
         const req = carro.id_carro
           ? {
               url: `${API_URL}/carro/edit/${carro.id_carro}`,
-              method: "PUT",
+              method: "PUT" as const,
             }
           : {
               url: `${API_URL}/carro/cad`,
-              method: "POST",
+              method: "POST" as const,
             };
 
         await fetch(req.url, {
@@ -162,7 +168,7 @@ export default function EditarCliente() {
 
       toast.success("Cliente atualizado com sucesso!");
       navigate("/app/clientes");
-    } catch (err) {
+    } catch {
       toast.error("Erro ao salvar alterações");
     } finally {
       setSubmitting(false);
@@ -228,13 +234,17 @@ export default function EditarCliente() {
                     onChange={(e) => handleChange(e, index)}
                   />
 
-                  <Button variant="danger" onClick={() => removeCarro(index)}>
+                  <Button
+                    variant="danger"
+                    type="button"
+                    onClick={() => removeCarro(index)}
+                  >
                     X
                   </Button>
                 </div>
               ))}
 
-              <Button variant="secondary" onClick={addCarro}>
+              <Button variant="secondary" type="button" onClick={addCarro}>
                 Adicionar Carro
               </Button>
 
@@ -242,7 +252,11 @@ export default function EditarCliente() {
                 <Button variant="success" type="submit" disabled={submitting}>
                   {submitting ? "Salvando..." : "Salvar"}
                 </Button>
-                <Button variant="secondary" onClick={() => navigate(-1)}>
+                <Button
+                  variant="secondary"
+                  type="button"
+                  onClick={() => navigate(-1)}
+                >
                   Cancelar
                 </Button>
               </div>

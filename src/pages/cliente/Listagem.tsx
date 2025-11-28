@@ -5,10 +5,16 @@ import Modal from "react-bootstrap/Modal";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
+type Cliente = {
+  id_cliente: number;
+  nome: string;
+  carros: { modelo: string; placa: string }[];
+};
+
 export default function ListaCliente() {
-  const [clientes, setClientes] = useState([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [clienteToDelete, setClienteToDelete] = useState(null);
+  const [clienteToDelete, setClienteToDelete] = useState<Cliente | null>(null);
 
   const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token");
