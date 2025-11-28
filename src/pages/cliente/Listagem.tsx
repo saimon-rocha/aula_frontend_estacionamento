@@ -126,18 +126,18 @@ export default function ListaCliente() {
             </tr>
           </thead>
           <tbody>
-            {clientes.map((cliente) => (
+            {clientes.map((cliente: Cliente) => (
               <tr key={cliente.id_cliente}>
                 <td>{cliente.id_cliente}</td>
                 <td>{cliente.nome}</td>
                 <td>
                   {cliente.carros.length > 0
-                    ? cliente.carros.map((c) => c.modelo).join(", ")
+                    ? cliente.carros.map((c: Carro) => c.modelo).join(", ")
                     : "Sem carro"}
                 </td>
                 <td>
                   {cliente.carros.length > 0
-                    ? cliente.carros.map((c) => c.placa).join(", ")
+                    ? cliente.carros.map((c: Carro) => c.placa).join(", ")
                     : "Sem carro"}
                 </td>
                 {isAdmin && (
