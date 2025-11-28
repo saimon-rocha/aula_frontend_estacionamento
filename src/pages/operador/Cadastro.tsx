@@ -73,7 +73,7 @@ export default function OperadorCadastro() {
         throw new Error(msg);
       }
 
-      const data = await res.json().catch(() => null);
+      await res.json().catch(() => null);
       toast.success("Operador cadastrado com sucesso!");
       // se quiser navegar de volta pra listagem
       navigate("/operador");

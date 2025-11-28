@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 type FormState = {
   nome: string;
   email: string;
-  senha: string;
+  senha?: string; // <-- opcional agora
   admin: boolean;
 };
 
@@ -86,8 +86,8 @@ export default function OperadorEditar() {
     try {
       // Remove a senha se estiver vazia
       const payload = { ...form };
-      if (payload.senha.trim() === "") delete payload.senha;
-
+      if (payload.senha?.trim() === "") delete payload.senha;
+      
       const res = await fetch(`${API_URL}/operador/edit/${id_operador}`, {
         method: "PUT",
         headers: {
