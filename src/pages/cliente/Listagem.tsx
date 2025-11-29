@@ -20,7 +20,14 @@ export default function ListaCliente() {
 
   const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token") ?? "";
-  const isAdmin = JSON.parse(localStorage.getItem("isAdmin") ?? "false");
+  const rawAdmin = localStorage.getItem("isAdmin");
+  let isAdmin = false;
+
+  try {
+    isAdmin = rawAdmin ? JSON.parse(rawAdmin) : false;
+  } catch {
+    isAdmin = false;
+  }
 
   const navigate = useNavigate();
 
@@ -46,9 +53,17 @@ export default function ListaCliente() {
         return;
       }
 
-      if (!res.ok) throw new Error("Erro ao buscar Clientes");
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || "Erro ao buscar Clientes");
+      }
 
-      const json: { data?: { clientes?: Cliente[] } } = await res.json();
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Resposta do servidor não é JSON");
+      }
+
+      const json = await res.json();
       const lista: Cliente[] = json.data?.clientes || [];
       setClientes(lista);
     } catch (error) {
@@ -140,8 +155,8 @@ export default function ListaCliente() {
                     ? cliente.carros.map((c: Carro) => c.placa).join(", ")
                     : "Sem carro"}
                 </td>
-                {isAdmin && (
-                  <td>
+                <td>
+                  {isAdmin && (
                     <Button
                       variant="danger"
                       size="sm"
@@ -150,17 +165,17 @@ export default function ListaCliente() {
                     >
                       Excluir
                     </Button>
-                    <Button
-                      variant="warning"
-                      size="sm"
-                      onClick={() =>
-                        navigate(`/app/cliente/editar/${cliente.id_cliente}`)
-                      }
-                    >
-                      Editar
-                    </Button>
-                  </td>
-                )}
+                  )}
+                  <Button
+                    variant="warning"
+                    size="sm"
+                    onClick={() =>
+                      navigate(`/app/cliente/editar/${cliente.id_cliente}`)
+                    }
+                  >
+                    Editar
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>

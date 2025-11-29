@@ -16,12 +16,23 @@ type Operador = {
 export default function ListaOperador() {
   const [operadores, setOperadores] = useState<Operador[]>([]);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [operadorToDelete, setOperadorToDelete] = useState<Operador | null>(null);
+  const [operadorToDelete, setOperadorToDelete] = useState<Operador | null>(
+    null
+  );
 
   const API_URL = import.meta.env.VITE_API_URL;
   const token = localStorage.getItem("token") ?? "";
-  const isAdmin = JSON.parse(localStorage.getItem("isAdmin") ?? "false");
-  const usuarioLogado = JSON.parse(localStorage.getItem("usuarioLogado") ?? "null");
+  const rawAdmin = localStorage.getItem("isAdmin");
+  let isAdmin = false;
+
+  try {
+    isAdmin = rawAdmin ? JSON.parse(rawAdmin) : false;
+  } catch {
+    isAdmin = false;
+  }
+  const usuarioLogado = JSON.parse(
+    localStorage.getItem("usuarioLogado") ?? "null"
+  );
 
   const navigate = useNavigate();
 
@@ -84,7 +95,9 @@ export default function ListaOperador() {
         prev.filter((op) => op.id_operador !== operadorToDelete.id_operador)
       );
 
-      toast.success(`Operador "${operadorToDelete.nome}" excluído com sucesso!`);
+      toast.success(
+        `Operador "${operadorToDelete.nome}" excluído com sucesso!`
+      );
     } catch (err) {
       console.error(err);
       toast.error("Erro ao excluir operador.");
@@ -118,8 +131,8 @@ export default function ListaOperador() {
                 <td>{op.nome}</td>
                 <td>{op.email}</td>
                 <td>{op.admin ? "Sim" : "Não"}</td>
-                {isAdmin && (
-                  <td>
+                <td>
+                  {isAdmin && (
                     <Button
                       variant="danger"
                       size="sm"
@@ -128,17 +141,18 @@ export default function ListaOperador() {
                     >
                       Excluir
                     </Button>
-                    <Button
-                      variant="warning"
-                      size="sm"
-                      onClick={() =>
-                        navigate(`/app/operador/editar/${op.id_operador}`)
-                      }
-                    >
-                      Editar
-                    </Button>
-                  </td>
-                )}
+                  )}
+
+                  <Button
+                    variant="warning"
+                    size="sm"
+                    onClick={() =>
+                      navigate(`/app/operador/editar/${op.id_operador}`)
+                    }
+                  >
+                    Editar
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>
